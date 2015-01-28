@@ -1157,6 +1157,7 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
 
 unsigned long addConstraintTime;
 unsigned constraintsAdded;
+
 void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {
   constraintsAdded++;
   if (ConstantExpr *CE = dyn_cast<ConstantExpr>(condition)) {
@@ -1377,6 +1378,7 @@ void Executor::executeGetValue(ExecutionState &state,
   }
 }
 
+// ???Skip the current instruction
 void Executor::stepInstruction(ExecutionState &state) {
   if (DebugPrintInstructions) {
     printFileLine(state, state.pc);
@@ -1395,6 +1397,7 @@ void Executor::stepInstruction(ExecutionState &state) {
     haltExecution = true;
 }
 
+// Function call
 void Executor::executeCall(ExecutionState &state, 
                            KInstruction *ki,
                            Function *f,
@@ -1755,7 +1758,7 @@ void Executor::executeInstruction(ExecutionState &state, KInstruction *ki) {
       // up with convenient instruction specific data.
       if (statsTracker && state.stack.back().kf->trackCoverage)
         statsTracker->markBranchVisited(branches.first, branches.second);
-
+      // Add both branches
       if (branches.first)
         transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
       if (branches.second)
@@ -2752,6 +2755,7 @@ void Executor::run(ExecutionState &initialState) {
   
   // Concolic execution here
   if (usingSeeds || UseConcretePath) {
+    // Initi seeds/regression tests
     std::vector<SeedInfo> &v = seedMap[&initialState];
     if (UseConcretePath) {
       // Use a dummy seed. In zest mode, klee_make_symbolic determines 'seed' 
@@ -2769,6 +2773,7 @@ void Executor::run(ExecutionState &initialState) {
     int lastNumSeeds = (UseConcretePath ? 10 : usingSeeds->size()+10);
     double lastTime, startTime = lastTime = util::getWallTime();
     ExecutionState *lastState = 0;
+    
     while (!seedMap.empty()) {
       if (haltExecution) {
         if (UseConcretePath) { haltExecution = false; goto search; }
@@ -2894,6 +2899,7 @@ void Executor::run(ExecutionState &initialState) {
         disableSeeding(state);
       }
     }
+    // If memory budget is specified
     if (MaxMemory) {
       if ((stats::instructions & 0xFFFF) == 0) {
         // We need to avoid calling GetMallocUsage() often because it

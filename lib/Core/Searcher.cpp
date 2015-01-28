@@ -675,6 +675,7 @@ ExecutionState &ZESTSearcher::selectState() {
       std::pair<std::multimap<int, ExecutionState*>::iterator, std::multimap<int, ExecutionState*>::iterator> range;
       for (range = itos->equal_range(*it - distance);
            range.first != range.second; ++range.first) {
+        // 
         if (range.first->second->seedingInstExecuted < bound) {
           state = range.first->second;
           _baseInstruction = baseInstruction = range.first->first;
@@ -708,7 +709,7 @@ ExecutionState &ZESTSearcher::selectState() {
       }
     }
 
-    assert(ok && "invalid state selected");
+    assert(ok && "Invalid state selected");
     states.push_back(state);
     state->seedingTTL = seBound(distance) - state->seedingInstExecuted + 1;
     state->seedingInstExecuted = seBound(distance);
